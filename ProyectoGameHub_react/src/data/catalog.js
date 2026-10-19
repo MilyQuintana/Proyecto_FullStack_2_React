@@ -403,7 +403,7 @@ export const PRODUCTS = [
         "category": "PCs-Armados",
         "brand": "gamehub",
         "regularPrice": 899990,
-        "discountPrice": 799990,
+        "discountPrice": 749990,
         "stock": 5,
         "featured": true,
         "image": "/img/productos/pc-armado-ryzen-5-edition.png",
