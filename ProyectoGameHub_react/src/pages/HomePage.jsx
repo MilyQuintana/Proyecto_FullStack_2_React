@@ -81,7 +81,7 @@ export default function HomePage() {
 
             <section className="container py-5" aria-labelledby="video-titulo">
                 <h2 id="video-titulo">Producto Destacado</h2>
-                <p>Mira en detalle nuestra pantalla, nuestro producto más vendido</p>
+                <p>Mira en detalle nuestro notebook, nuestro producto más vendido</p>
                 <div className="d-flex justify-content-center overflow-auto">
                     <TikTokEmbed />
                 </div>

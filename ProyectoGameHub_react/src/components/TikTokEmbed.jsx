@@ -1,28 +1,32 @@
-import { useEffect } from "react";
+import { useState } from "react";
 
 const VIDEO_URL = "https://www.tiktok.com/@jccomputers/video/7679526164934806804";
 const VIDEO_ID = "7679526164934806804";
-const SCRIPT_SRC = "https://www.tiktok.com/embed.js";
 
 export default function TikTokEmbed() {
-    useEffect(() => {
-        const script = document.createElement("script");
-        script.src = SCRIPT_SRC;
-        script.async = true;
-        document.body.appendChild(script);
-        return () => {
-            document.body.removeChild(script);
-        };
-    }, []);
+    const [cargar, setCargar] = useState(false);
 
     return (
-        <blockquote
-            className="tiktok-embed"
-            cite={VIDEO_URL}
-            data-video-id={VIDEO_ID}
-            style={{ maxWidth: 605, minWidth: 325 }}
-        >
-            <section />
-        </blockquote>
+        <div className="tiktok-embed-contenedor">
+            {cargar ? (
+                <iframe
+                    title="Video de TikTok de GameHub Store"
+                    src={`https://www.tiktok.com/embed/v2/${VIDEO_ID}`}
+                    width="325"
+                    height="740"
+                    allowFullScreen
+                    allow="encrypted-media; fullscreen; picture-in-picture"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    style={{ border: 0, maxWidth: "100%" }}
+                />
+            ) : (
+                <button type="button" className="btn btn-primary" onClick={() => setCargar(true)}>
+                    ▶ Ver video
+                </button>
+            )}
+            <p className="small mt-2 mb-0">
+                ¿No carga el video? <a href={VIDEO_URL} target="_blank" rel="noopener noreferrer">Míralo en TikTok</a>
+            </p>
+        </div>
     );
 }

@@ -1,8 +1,42 @@
 const path = require("path");
 const fs = require("fs");
 
-const LOCAL_CHROME = "/home/claude/.cache/puppeteer/chrome/linux-131.0.6778.204/chrome-linux64/chrome";
-if (!process.env.CHROME_BIN && fs.existsSync(LOCAL_CHROME)) process.env.CHROME_BIN = LOCAL_CHROME;
+function detectarNavegador() {
+    const env = process.env;
+    const candidatos = {
+        win32: [
+            ["ProgramFiles", "Google\\Chrome\\Application\\chrome.exe"],
+            ["ProgramFiles(x86)", "Google\\Chrome\\Application\\chrome.exe"],
+            ["LOCALAPPDATA", "Google\\Chrome\\Application\\chrome.exe"],
+            ["ProgramFiles", "BraveSoftware\\Brave-Browser\\Application\\brave.exe"],
+            ["ProgramFiles(x86)", "BraveSoftware\\Brave-Browser\\Application\\brave.exe"],
+            ["LOCALAPPDATA", "BraveSoftware\\Brave-Browser\\Application\\brave.exe"],
+            ["ProgramFiles", "Microsoft\\Edge\\Application\\msedge.exe"],
+            ["ProgramFiles(x86)", "Microsoft\\Edge\\Application\\msedge.exe"],
+        ].map(([base, rel]) => env[base] && path.join(env[base], rel)),
+        darwin: [
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+            "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+            "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        ],
+        linux: [
+            "/usr/bin/google-chrome",
+            "/usr/bin/google-chrome-stable",
+            "/usr/bin/brave-browser",
+            "/usr/bin/microsoft-edge",
+            "/usr/bin/chromium",
+            "/usr/bin/chromium-browser",
+            "/snap/bin/chromium",
+        ],
+    };
+    return (candidatos[process.platform] || []).find((ruta) => ruta && fs.existsSync(ruta));
+}
+
+if (!process.env.CHROME_BIN) {
+    const navegador = detectarNavegador();
+    if (navegador) process.env.CHROME_BIN = navegador;
+}
 
 module.exports = function (config) {
     config.set({
