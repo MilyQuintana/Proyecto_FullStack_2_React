@@ -1,5 +1,5 @@
 import { readStorage, removeStorage, writeStorage } from "../../src/utils/storage";
-import { mockLocalStorage } from "../helpers/mocks";
+import { mockLocalStorage } from "../helpers/mocks.js";
 
 describe("storage (con localStorage simulado)", () => {
   it("writeStorage serializa a JSON y readStorage lo recupera", () => {

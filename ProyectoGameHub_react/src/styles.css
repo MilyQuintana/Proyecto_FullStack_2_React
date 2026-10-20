@@ -1,0 +1,241 @@
+/* =====================================================================
+   GameHub Store: Paleta 4 "Neón de tienda" (Caso Semestral, sección 11).
+   Los colores se definen una sola vez en :root y alimentan las variables
+   de Bootstrap 5.3 (modo oscuro). Acento celeste para enlaces, navegación,
+   foco y estados; el magenta primario queda para la acción principal.
+   ===================================================================== */
+:root {
+    --color-fondo: #120e1a;
+    --color-superficie: #1e1730;
+    --color-primario: #d6236a;
+    --color-acento: #00d2ff;
+    --color-texto: #f3effa;
+    --color-error: #ff7a7a;
+    --color-texto-suave: #b8afcb;
+    --color-borde: #3a3153;
+    --radio-borde: 8px;
+}
+
+:root,
+[data-bs-theme="dark"] {
+    --bs-body-bg: var(--color-fondo);
+    --bs-body-bg-rgb: 18, 14, 26;
+    --bs-body-color: var(--color-texto);
+    --bs-body-font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --bs-secondary-bg: var(--color-superficie);
+    --bs-secondary-bg-rgb: 30, 23, 48;
+    --bs-tertiary-bg: var(--color-superficie);
+    --bs-tertiary-bg-rgb: 30, 23, 48;
+    --bs-border-color: var(--color-borde);
+    --bs-border-radius: var(--radio-borde);
+    --bs-primary: var(--color-primario);
+    --bs-primary-rgb: 214, 35, 106;
+    --bs-link-color: var(--color-acento);
+    --bs-link-color-rgb: 0, 210, 255;
+    --bs-link-hover-color: #5fe3ff;
+    --bs-link-hover-color-rgb: 95, 227, 255;
+    --bs-danger-text-emphasis: var(--color-error);
+    --bs-secondary-color: var(--color-texto-suave);
+    --bs-secondary-color-rgb: 184, 175, 203;
+    --bs-heading-color: var(--color-texto);
+    --bs-focus-ring-color: rgba(0, 210, 255, 0.35);
+    /* Avisos informativos en celeste (acento) */
+    --bs-info: var(--color-acento);
+    --bs-info-rgb: 0, 210, 255;
+    --bs-info-text-emphasis: #7fe6ff;
+    --bs-info-bg-subtle: rgba(0, 210, 255, 0.12);
+    --bs-info-border-subtle: rgba(0, 210, 255, 0.45);
+}
+
+body {
+    --bs-body-color: var(--color-texto);
+    --bs-body-color-rgb: 243, 239, 250;
+}
+
+/* Botón primario: magenta con texto blanco (4.9:1) */
+.btn-primary {
+    --bs-btn-bg: var(--color-primario);
+    --bs-btn-border-color: var(--color-primario);
+    --bs-btn-hover-bg: #b81c59;
+    --bs-btn-hover-border-color: #b81c59;
+    --bs-btn-active-bg: #a01850;
+    --bs-btn-active-border-color: #a01850;
+    --bs-btn-disabled-bg: var(--color-primario);
+    --bs-btn-disabled-border-color: var(--color-primario);
+}
+
+/* Acciones secundarias: contorno celeste */
+.btn-outline-light {
+    --bs-btn-color: var(--color-acento);
+    --bs-btn-border-color: var(--color-acento);
+    --bs-btn-hover-color: #120e1a;
+    --bs-btn-hover-bg: var(--color-acento);
+    --bs-btn-hover-border-color: var(--color-acento);
+    --bs-btn-active-color: #120e1a;
+    --bs-btn-active-bg: #5fe3ff;
+    --bs-btn-active-border-color: #5fe3ff;
+    --bs-btn-disabled-color: var(--color-texto-suave);
+    --bs-btn-disabled-border-color: var(--color-borde);
+}
+
+.card {
+    --bs-card-bg: var(--color-superficie);
+    --bs-card-border-color: var(--color-borde);
+}
+
+.table {
+    --bs-table-bg: transparent;
+}
+
+.table thead th {
+    color: var(--color-acento);
+}
+
+/* Marca */
+.marca span {
+    color: var(--color-primario);
+}
+
+/* Navegación: enlace activo y hover en celeste */
+.navbar .nav-link {
+    --bs-nav-link-color: var(--color-texto);
+    --bs-nav-link-hover-color: var(--color-acento);
+    --bs-navbar-active-color: var(--color-acento);
+    border-bottom: 2px solid transparent;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus-visible,
+.navbar .nav-link.active {
+    color: var(--color-acento);
+}
+
+.navbar .nav-link.active {
+    border-bottom-color: var(--color-acento);
+    font-weight: 600;
+}
+
+/* Banner de portada */
+.banner {
+    background: linear-gradient(135deg, var(--color-superficie), var(--color-fondo));
+    border-bottom: 2px solid var(--color-acento);
+}
+
+/* Títulos de sección con barra celeste */
+main h2 {
+    border-left: 4px solid var(--color-acento);
+    padding-left: 0.6rem;
+}
+
+/* Tarjeta de producto: título celeste, precio en texto normal */
+.tarjeta-producto {
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.tarjeta-producto:hover,
+.tarjeta-producto:focus-visible {
+    transform: translateY(-3px);
+    border-color: var(--color-acento);
+}
+
+.tarjeta-producto .card-title {
+    color: var(--color-acento);
+}
+
+.tarjeta-producto:hover .card-title,
+.tarjeta-producto:focus-visible .card-title {
+    color: var(--bs-link-hover-color);
+    text-decoration: underline;
+}
+
+.tarjeta-producto img {
+    height: 200px;
+    object-fit: contain;
+    padding: 0.5rem;
+}
+
+/* Carrusel de categorías (componente carousel de Bootstrap controlado por React) */
+.categorias-carousel {
+    max-width: 640px;
+    margin-inline: auto;
+}
+
+.categorias-carousel .carousel-item img {
+    height: 400px;
+    object-fit: contain;
+}
+
+.categorias-carousel .carousel-item a span {
+    color: var(--color-acento);
+}
+
+.categorias-carousel .carousel-item a:hover span,
+.categorias-carousel .carousel-item a:focus-visible span {
+    color: var(--bs-link-hover-color);
+    text-decoration: underline;
+}
+
+.categorias-carousel .carousel-item.active {
+    display: block;
+}
+
+/* Detalle de producto */
+.detalle-producto__miniaturas img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    cursor: pointer;
+}
+
+.img-thumbnail.border-primary {
+    border-color: var(--color-acento) !important;
+}
+
+.precio-tachado {
+    text-decoration: line-through;
+    color: var(--color-texto-suave);
+}
+
+/* Carrito: cantidad */
+.cantidad-control__valor {
+    min-width: 2.5rem;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Formularios: foco celeste */
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: var(--color-acento);
+    box-shadow: 0 0 0 0.2rem rgba(0, 210, 255, 0.25);
+}
+
+.form-check-input:checked {
+    background-color: var(--color-acento);
+    border-color: var(--color-acento);
+}
+
+.form-text {
+    color: var(--color-texto-suave);
+}
+
+/* Accesibilidad */
+:focus-visible {
+    outline: 2px solid var(--color-acento);
+    outline-offset: 2px;
+}
+
+/* Controles del carrusel visibles sobre fondo oscuro */
+.categorias-carousel .carousel-control-prev-icon,
+.categorias-carousel .carousel-control-next-icon {
+    filter: none;
+}
+
+.categorias-carousel .carousel-indicators button {
+    background-color: #fff;
+}
+
+.categorias-carousel .carousel-indicators button.active {
+    background-color: var(--color-acento);
+}

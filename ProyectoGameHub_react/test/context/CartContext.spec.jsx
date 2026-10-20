@@ -2,8 +2,8 @@ import { act, renderHook } from "@testing-library/react";
 import { useCart } from "../../src/context/CartContext";
 import { getFinalPrice } from "../../src/utils/format";
 import { PRODUCTS } from "../../src/data/catalog";
-import { CartWrapper } from "../helpers/render";
-import { makeOrder, mockLocalStorage } from "../helpers/mocks";
+import { CartWrapper } from "../helpers/render.jsx";
+import { makeOrder, mockLocalStorage } from "../helpers/mocks.js";
 
 const [p1, p2] = PRODUCTS;
 const setup = () => renderHook(() => useCart(), { wrapper: CartWrapper });

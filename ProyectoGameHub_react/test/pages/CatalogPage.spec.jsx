@@ -1,8 +1,8 @@
 import { fireEvent, screen } from "@testing-library/react";
 import CatalogPage from "../../src/pages/CatalogPage";
 import { PRODUCTS } from "../../src/data/catalog";
-import { renderWithProviders } from "../helpers/render";
-import { mockLocalStorage } from "../helpers/mocks";
+import { renderWithProviders } from "../helpers/render.jsx";
+import { mockLocalStorage } from "../helpers/mocks.js";
 
 const count = () => screen.getByText(/producto\(s\) encontrado\(s\)/).textContent;
 

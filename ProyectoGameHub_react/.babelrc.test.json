@@ -1,0 +1,4 @@
+{
+  "presets": [["@babel/preset-env", { "targets": { "chrome": "100" } }], ["@babel/preset-react", { "runtime": "automatic" }]],
+  "plugins": [["istanbul", { "include": ["src/**/*.js", "src/**/*.jsx"], "exclude": ["test/**", "src/main.jsx", "src/data/**"] }]]
+}

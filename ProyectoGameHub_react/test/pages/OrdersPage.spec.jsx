@@ -1,7 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react";
 import OrdersPage from "../../src/pages/OrdersPage";
-import { renderWithProviders } from "../helpers/render";
-import { firstProduct, makeOrder, mockLocalStorage } from "../helpers/mocks";
+import { renderWithProviders } from "../helpers/render.jsx";
+import { firstProduct, makeOrder, mockLocalStorage } from "../helpers/mocks.js";
 
 const seedOrders = (...orders) => mockLocalStorage({ gamehub_ordenes: JSON.stringify(orders) });
 const openDetail = () => fireEvent.click(screen.getByRole("button", { name: "Ver detalle" }));

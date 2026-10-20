@@ -1,7 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react";
 import CheckoutPage, { formatPhoneDigits } from "../../src/pages/CheckoutPage";
-import { renderWithProviders } from "../helpers/render";
-import { firstProduct, mockLocalStorage } from "../helpers/mocks";
+import { renderWithProviders } from "../helpers/render.jsx";
+import { firstProduct, mockLocalStorage } from "../helpers/mocks.js";
 
 const phoneInput = () => screen.getByLabelText("Teléfono");
 const type = (label, value) => fireEvent.change(screen.getByLabelText(label), { target: { value } });

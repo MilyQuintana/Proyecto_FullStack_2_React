@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import ProductDetailPage, { ReviewList, stockMessage } from "../../src/pages/ProductDetailPage";
-import { renderWithProviders } from "../helpers/render";
-import { firstProduct, mockLocalStorage } from "../helpers/mocks";
+import { renderWithProviders } from "../helpers/render.jsx";
+import { firstProduct, mockLocalStorage } from "../helpers/mocks.js";
 
 const renderDetail = (id) => renderWithProviders(<ProductDetailPage />, { route: `/producto/${id}`, path: "/producto/:id" });
 

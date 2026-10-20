@@ -1,8 +1,8 @@
 import { fireEvent, screen, within } from "@testing-library/react";
 import CartPage from "../../src/pages/CartPage";
 import { formatCLP, getFinalPrice } from "../../src/utils/format";
-import { renderWithProviders } from "../helpers/render";
-import { firstProduct, mockLocalStorage } from "../helpers/mocks";
+import { renderWithProviders } from "../helpers/render.jsx";
+import { firstProduct, mockLocalStorage } from "../helpers/mocks.js";
 
 const seedCart = (quantity) =>
   mockLocalStorage({ gamehub_carrito: JSON.stringify([{ idProducto: firstProduct.id, cantidad: quantity }]) });

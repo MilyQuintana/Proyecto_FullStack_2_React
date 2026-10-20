@@ -1,7 +1,7 @@
 import { fireEvent, screen } from "@testing-library/react";
 import HomePage, { NewsletterForm } from "../../src/pages/HomePage";
-import { renderWithProviders } from "../helpers/render";
-import { mockLocalStorage } from "../helpers/mocks";
+import { renderWithProviders } from "../helpers/render.jsx";
+import { mockLocalStorage } from "../helpers/mocks.js";
 
 describe("HomePage", () => {
   beforeEach(() => mockLocalStorage());
