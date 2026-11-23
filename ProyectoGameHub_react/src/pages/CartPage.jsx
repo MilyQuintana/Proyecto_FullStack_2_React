@@ -65,14 +65,14 @@ export default function CartPage() {
         setCouponError("");
     };
 
-    const handleCoupon = (event) => {
+    const handleCoupon = async (event) => {
         event.preventDefault();
         const missing = required(couponInput, "El código de cupón");
         if (missing) {
             setCouponError(missing);
             return;
         }
-        const result = applyCoupon(couponInput.trim());
+        const result = await applyCoupon(couponInput.trim());
         setCouponError(result.valid ? "" : result.reason);
     };
 

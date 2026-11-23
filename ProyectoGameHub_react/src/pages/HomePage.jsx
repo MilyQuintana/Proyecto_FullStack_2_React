@@ -5,6 +5,7 @@ import CategoryCarousel from "../components/CategoryCarousel";
 import FormField, { controlClass } from "../components/FormField";
 import ProductCard from "../components/ProductCard";
 import TikTokEmbed from "../components/TikTokEmbed";
+import { useCatalog } from "../context/CatalogContext";
 import { email as validateEmail } from "../utils/validators";
 
 export function NewsletterForm() {
@@ -51,7 +52,18 @@ export function NewsletterForm() {
 }
 
 export default function HomePage() {
-    const featured = PRODUCTS.filter((product) => product.featured).slice(0, 4);
+    const { products: apiProducts } = useCatalog();
+    // Conserva la selección y apariencia original, pero usa el ID, precio y stock reales.
+    const featured = PRODUCTS
+        .filter((product) => product.featured)
+        .map((localProduct) => {
+            const apiProduct = apiProducts.find((product) => product.name === localProduct.name);
+            return apiProduct
+                ? { ...localProduct, ...apiProduct, image: localProduct.image ?? apiProduct.image, discountPrice: null }
+                : null;
+        })
+        .filter(Boolean)
+        .slice(0, 4);
 
     return (
         <>

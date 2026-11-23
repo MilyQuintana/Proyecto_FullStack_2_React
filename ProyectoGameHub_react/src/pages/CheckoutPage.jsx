@@ -4,6 +4,8 @@ import { useCart } from "../context/CartContext";
 import FormField, { controlClass } from "../components/FormField";
 import { formatCLP } from "../utils/format";
 import { email, hasErrors, phoneCL, required, selectRequired } from "../utils/validators";
+import { useAuth } from "../context/AuthContext";
+import { gamehubApi } from "../services/gamehubApi";
 
 const REGIONS = [
     { value: "metropolitana", label: "Metropolitana de Santiago" },
@@ -46,12 +48,27 @@ function validate(form) {
 }
 
 export default function CheckoutPage() {
-    const { detailedLines, subtotal, discount, total, clearCart, addOrder } = useCart();
+    const { detailedLines, subtotal, discount, total, clearCart, couponCode, couponInfo: cartCouponInfo } = useCart();
+    const { token } = useAuth();
+    const [submitError, setSubmitError] = useState("");
+    const [sending, setSending] = useState(false);
     const [form, setForm] = useState(EMPTY_FORM);
     const [errors, setErrors] = useState({});
-    const [orderNumber, setOrderNumber] = useState(null);
+    const [completedOrder, setCompletedOrder] = useState(null);
+    const [coupon, setCoupon] = useState(couponCode);
+    const [couponInfo, setCouponInfo] = useState(null);
+    const [couponError, setCouponError] = useState("");
 
     const isEmpty = detailedLines.length === 0;
+    const activeCouponInfo = couponInfo || cartCouponInfo;
+    const couponDiscount = activeCouponInfo ? Math.min(subtotal * activeCouponInfo.porcentaje / 100, activeCouponInfo.tope ?? Infinity) : 0;
+    const finalTotal = Math.max(subtotal - couponDiscount, 0);
+
+    const applyCoupon = async () => {
+        if (!coupon.trim()) return;
+        try { setCouponInfo(await gamehubApi.validarCupon(coupon, token)); setCouponError(""); }
+        catch (cause) { setCouponInfo(null); setCouponError(cause.message || "Cupón no válido."); }
+    };
 
     const bind = (field, base = "form-control") => ({
         value: form[field],
@@ -65,7 +82,7 @@ export default function CheckoutPage() {
         setForm((current) => ({ ...current, phone: digits.slice(0, 8) }));
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
 
         if (isEmpty) {
@@ -75,38 +92,28 @@ export default function CheckoutPage() {
 
         const nextErrors = validate(form);
         setErrors(nextErrors);
+
         if (hasErrors(nextErrors)) return;
+        setSubmitError("");
+        setSending(true);
 
-        const number = `GH-${Date.now().toString().slice(-8)}`;
+        try {
+            const boleta = await gamehubApi.crearBoleta(
+                detailedLines.map((line) => ({
+                    productoId: line.product.id,
+                    cantidad: line.quantity,
+                })),
+                token, coupon
+            );
 
-        addOrder({
-            numero: number,
-            fecha: new Date().toISOString().slice(0, 10),
-            estado: "Pagada",
-            total,
-            subtotal,
-            descuento: discount,
-            pago: { metodo: form.paymentMethod, estado: "Aprobado" },
-            despacho: {
-                estado: "En preparación",
-                nombre: form.name.trim(),
-                correo: form.email.trim(),
-                telefono: `${PHONE_PREFIX}${form.phone}`,
-                region: form.region,
-                comuna: form.commune.trim(),
-                direccion: form.address.trim(),
-            },
-            productos: detailedLines.map((line) => ({
-                id: line.product.id,
-                nombre: line.product.name,
-                cantidad: line.quantity,
-                subtotal: line.subtotal,
-                resenada: false,
-            })),
-        });
+            clearCart();
+            setCompletedOrder(boleta);
+        } catch (cause) {
+            setSubmitError(cause.message || "No fue posible confirmar la compra.");
+        } finally {
+            setSending(false);
+        }
 
-        clearCart();
-        setOrderNumber(number);
     };
 
     return (
@@ -115,10 +122,11 @@ export default function CheckoutPage() {
                 <div className="col-12 col-lg-7">
                     <h1 id="checkout-titulo" className="h2">Finalizar compra</h1>
 
-                    {orderNumber ? (
+                    {completedOrder ? (
                         <div className="alert alert-success" aria-live="polite">
                             <p className="fw-bold">¡Compra confirmada!</p>
-                            <p>Número de orden: <strong>{orderNumber}</strong></p>
+                            <p>Número de orden: <strong>{completedOrder.id}</strong></p>
+                            <p>Total cobrado: <strong>{formatCLP(completedOrder.total)}</strong></p>
                             <Link to="/ordenes" className="btn btn-primary">Ver mis órdenes</Link>
                         </div>
                     ) : (
@@ -174,6 +182,10 @@ export default function CheckoutPage() {
                             </FormField>
 
                             <h2 className="h5">Método de pago</h2>
+                            <FormField id="checkout-cupon" label="Código de descuento (opcional)" error={couponError}>
+                                <div className="input-group"><input id="checkout-cupon" className="form-control" value={coupon} onChange={(event) => { setCoupon(event.target.value.toUpperCase()); setCouponInfo(null); setCouponError(""); }} /><button type="button" className="btn btn-outline-light" onClick={applyCoupon}>Aplicar</button></div>
+                            </FormField>
+                            {activeCouponInfo && <p className="alert alert-success">Cupón {activeCouponInfo.codigo} aplicado: {activeCouponInfo.porcentaje}% de descuento.</p>}
                             <fieldset className="mb-3">
                                 <legend className="visually-hidden">Selecciona un método de pago</legend>
                                 {PAYMENT_METHODS.map((method) => (
@@ -191,9 +203,13 @@ export default function CheckoutPage() {
                                     </div>
                                 ))}
                             </fieldset>
-
-                            <button type="submit" className="btn btn-primary" disabled={isEmpty}>
-                                Confirmar compra
+                            {submitError && (
+                                <p className="alert alert-danger" role="alert">
+                                    {submitError}
+                                </p>
+                            )}
+                            <button type="submit" className="btn btn-primary" disabled={isEmpty || sending}>
+                                {sending ? "Confirmando..." : "Confirmar compra"}
                             </button>
                         </form>
                     )}
@@ -203,7 +219,7 @@ export default function CheckoutPage() {
                     <div className="card card-body">
                         <h2 id="checkout-resumen-titulo" className="h5">Resumen de la orden</h2>
                         <ul className="list-unstyled">
-                            {isEmpty && !orderNumber && <li>Tu carrito está vacío. Vuelve al catálogo para agregar productos.</li>}
+                            {isEmpty && !completedOrder && <li>Tu carrito está vacío. Vuelve al catálogo para agregar productos.</li>}
                             {detailedLines.map((line) => (
                                 <li key={line.product.id}>
                                     {line.quantity} x {line.product.name} — {formatCLP(line.subtotal)}
@@ -217,11 +233,11 @@ export default function CheckoutPage() {
                             </div>
                             <div className="d-flex justify-content-between">
                                 <dt className="fw-normal">Descuento</dt>
-                                <dd className="mb-1">-{formatCLP(discount)}</dd>
+                                <dd className="mb-1">-{formatCLP(couponDiscount)}</dd>
                             </div>
                             <div className="d-flex justify-content-between border-top pt-2 fs-5">
                                 <dt>Total</dt>
-                                <dd className="mb-0 fw-bold">{formatCLP(total)}</dd>
+                                <dd className="mb-0 fw-bold">{formatCLP(finalTotal)}</dd>
                             </div>
                         </dl>
                     </div>

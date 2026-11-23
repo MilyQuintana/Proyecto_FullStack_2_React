@@ -5,6 +5,7 @@ import FormField, { controlClass } from "../components/FormField";
 import ProductCard from "../components/ProductCard";
 import { getFinalPrice } from "../utils/format";
 import { rangeCoherence } from "../utils/validators";
+import { useCatalog } from "../context/CatalogContext";
 
 const PAGE_SIZE = 15;
 
@@ -29,6 +30,7 @@ function getInitialCategory(searchParams) {
 }
 
 export default function CatalogPage() {
+    const { products: apiProducts } = useCatalog();
     const [searchParams] = useSearchParams();
     const initialCategory = getInitialCategory(searchParams);
 
@@ -37,6 +39,18 @@ export default function CatalogPage() {
     const [applied, setApplied] = useState({ ...emptyDraft, category: initialCategory });
     const [priceError, setPriceError] = useState("");
     const [page, setPage] = useState(1);
+
+    // catalog.js conserva imágenes y categorías de presentación; la API manda IDs, precios y stock.
+    const products = useMemo(() => apiProducts.map((apiProduct) => {
+        const localProduct = PRODUCTS.find((product) => product.name === apiProduct.name);
+        return {
+            ...localProduct,
+            ...apiProduct,
+            category: localProduct?.category ?? apiProduct.category,
+            image: localProduct?.image ?? apiProduct.image,
+            discountPrice: null,
+        };
+    }), [apiProducts]);
 
     const updateDraft = (field) => (event) => setDraft((current) => ({ ...current, [field]: event.target.value }));
 
@@ -64,7 +78,7 @@ export default function CatalogPage() {
         const min = Number(applied.minPrice) || 0;
         const max = Number(applied.maxPrice) || Infinity;
 
-        const result = PRODUCTS.filter((product) => {
+        const result = products.filter((product) => {
             const price = getFinalPrice(product);
             return (
                 (!applied.category || product.category === applied.category) &&
@@ -79,7 +93,7 @@ export default function CatalogPage() {
         if (applied.sort === "nombre-asc") result.sort((a, b) => a.name.localeCompare(b.name));
 
         return result;
-    }, [applied]);
+    }, [applied, products]);
 
     const visibleCount = PAGE_SIZE * page;
     const visible = filtered.slice(0, visibleCount);

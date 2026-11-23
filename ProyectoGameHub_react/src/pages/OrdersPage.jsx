@@ -1,226 +1,139 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useCart } from "../context/CartContext";
-import { useReviews } from "../context/ReviewsContext";
-import FormField, { controlClass } from "../components/FormField";
+import { useAuth } from "../context/AuthContext";
+import { gamehubApi } from "../services/gamehubApi";
 import { formatCLP } from "../utils/format";
-import { integerInRange, required } from "../utils/validators";
+import { useReviews } from "../context/ReviewsContext";
+import { PRODUCTS } from "../data/catalog";
 
-const WARRANTY_DAYS = 30;
-
-export const isDelivered = (order) => order.despacho?.estado === "Entregado";
-
-export function ReviewForm({ order, onDone }) {
-    const { updateOrder } = useCart();
+function ReviewForm({ item, onDone }) {
     const { addReview } = useReviews();
-    const pending = order.productos.find((product) => !product.resenada);
-    const [comment, setComment] = useState("");
     const [rating, setRating] = useState("5");
-    const [errors, setErrors] = useState({});
+    const [comment, setComment] = useState("");
+    const [error, setError] = useState("");
 
-    if (!pending) {
-        return <p role="status" className="alert alert-info">Los productos de esta orden ya contienen una reseña.</p>;
-    }
-
-    const handleSubmit = (event) => {
+    const submit = (event) => {
         event.preventDefault();
-        if (!isDelivered(order)) return;
-        const nextErrors = {
-            comment: required(comment, "El comentario"),
-            rating: integerInRange(rating, { min: 1, max: 5, label: "La puntuación" }),
-        };
-        setErrors(nextErrors);
-        if (nextErrors.comment || nextErrors.rating) return;
-
-        addReview(pending.id, {
+        const localProduct = PRODUCTS.find((product) => product.name === item.productoNombre);
+        if (!localProduct) {
+            setError("No se encontró el producto para guardar la reseña.");
+            return;
+        }
+        if (!comment.trim() || Number(rating) < 1 || Number(rating) > 5) {
+            setError("Escribe un comentario y una puntuación entre 1 y 5.");
+            return;
+        }
+        addReview(localProduct.id, {
             author: "Tú",
             rating: Number(rating),
             comment: comment.trim(),
             date: new Date().toISOString().slice(0, 10),
         });
-        updateOrder(order.numero, {
-            productos: order.productos.map((product) =>
-                product.id === pending.id ? { ...product, resenada: true } : product
-            ),
-        });
-        onDone("¡Gracias por tu reseña!");
+        onDone();
     };
 
-    return (
-        <form onSubmit={handleSubmit} noValidate>
-            <FormField id="resena-comentario" label={`Reseña para "${pending.nombre}"`} error={errors.comment}>
-        <textarea
-            id="resena-comentario"
-            rows="3"
-            className={controlClass(errors.comment)}
-            value={comment}
-            onChange={(event) => setComment(event.target.value)}
-        />
-            </FormField>
-            <FormField id="resena-puntuacion" label="Puntuación (1 a 5)" error={errors.rating}>
-                <input
-                    type="number"
-                    id="resena-puntuacion"
-                    min="1"
-                    max="5"
-                    className={controlClass(errors.rating)}
-                    value={rating}
-                    onChange={(event) => setRating(event.target.value)}
-                />
-            </FormField>
-            <button type="submit" className="btn btn-primary">Enviar reseña</button>
-        </form>
-    );
-}
-
-export function WarrantyForm({ order, onDone }) {
-    const { updateOrder } = useCart();
-    const [reason, setReason] = useState("");
-    const [error, setError] = useState("");
-
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        const missing = required(reason, "El motivo de la garantía");
-        if (missing) {
-            setError(missing);
-            return;
-        }
-
-        const daysSincePurchase = (Date.now() - new Date(order.fecha)) / (1000 * 60 * 60 * 24);
-        if (daysSincePurchase > WARRANTY_DAYS) {
-            setError(`El plazo de garantía para esta orden ya venció (${WARRANTY_DAYS} días).`);
-            return;
-        }
-
-        updateOrder(order.numero, { garantia: { motivo: reason.trim(), estado: "En revisión" } });
-        onDone("Tu solicitud de garantía fue enviada y está en revisión.");
-    };
-
-    return (
-        <form onSubmit={handleSubmit} noValidate>
-            <FormField id="garantia-motivo" label="Motivo de la garantía" error={error}>
-        <textarea
-            id="garantia-motivo"
-            rows="3"
-            className={controlClass(error)}
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-        />
-            </FormField>
-            <button type="submit" className="btn btn-primary">Enviar solicitud</button>
-        </form>
-    );
-}
-
-export function OrderDetail({ order }) {
-    const { updateOrder } = useCart();
-    const delivered = isDelivered(order);
-    const [panel, setPanel] = useState(null);
-    const [notice, setNotice] = useState("");
-
-    const finish = (message) => {
-        setPanel(null);
-        setNotice(message);
-    };
-
-    const markDelivered = () => {
-        updateOrder(order.numero, {
-            estado: "Entregada",
-            despacho: { ...order.despacho, estado: "Entregado" },
-        });
-        setNotice("La orden fue marcada como entregada. Ya puedes escribir reseñas.");
-    };
-
-    const toggle = (name) => {
-        setNotice("");
-        setPanel((current) => (current === name ? null : name));
-    };
-
-    return (
-        <section className="col-12 col-lg-5" aria-labelledby="orden-detalle-titulo">
-            <div className="card card-body">
-                <h2 id="orden-detalle-titulo" className="h5">Detalle de la orden {order.numero}</h2>
-
-                <p><strong>Estado del pago:</strong> {order.pago.estado} ({order.pago.metodo})</p>
-                <p><strong>Seguimiento del despacho:</strong> {order.despacho.estado}</p>
-                {order.garantia && <p><strong>Garantía:</strong> {order.garantia.estado}</p>}
-
-                <ul className="list-unstyled">
-                    {order.productos.map((product) => (
-                        <li key={product.id}>
-                            {product.cantidad} x{" "}
-                            <Link to={`/producto/${product.id}`}>{product.nombre}</Link> - {formatCLP(product.subtotal)}
-                        </li>
-                    ))}
-                </ul>
-
-                <div className="d-flex flex-wrap gap-2 mb-3">
-                    {!delivered && (
-                        <button type="button" className="btn btn-outline-light" onClick={markDelivered}>
-                            Marcar como entregado (simulación)
-                        </button>
-                    )}
-                    <button
-                        type="button"
-                        className="btn btn-outline-light"
-                        disabled={!delivered}
-                        title={delivered ? undefined : "Disponible cuando el pedido esté entregado"}
-                        onClick={() => toggle("review")}
-                    >
-                        Escribir reseña
-                    </button>
-                    <button type="button" className="btn btn-outline-light" onClick={() => toggle("warranty")}>
-                        Solicitar garantía
-                    </button>
-                </div>
-
-                {!delivered && <p className="form-text">Podrás escribir reseñas cuando el pedido esté entregado.</p>}
-                {notice && <p role="status" className="alert alert-success">{notice}</p>}
-                {panel === "review" && delivered && <ReviewForm order={order} onDone={finish} />}
-                {panel === "warranty" && <WarrantyForm order={order} onDone={finish} />}
-            </div>
-        </section>
-    );
+    return <form className="border-top pt-3 mt-3" onSubmit={submit}>
+        <h3 className="h6">Reseñar: {item.productoNombre}</h3>
+        <label className="form-label" htmlFor="review-rating">Puntuación</label>
+        <select id="review-rating" className="form-select mb-2" value={rating} onChange={(event) => setRating(event.target.value)}>
+            {[5, 4, 3, 2, 1].map((value) => <option key={value} value={value}>{value} estrella(s)</option>)}
+        </select>
+        <label className="form-label" htmlFor="review-comment">Comentario</label>
+        <textarea id="review-comment" className="form-control mb-2" rows="3" value={comment} onChange={(event) => setComment(event.target.value)} />
+        {error && <p className="alert alert-danger">{error}</p>}
+        <button className="btn btn-primary">Publicar reseña</button>
+    </form>;
 }
 
 export default function OrdersPage() {
-    const { orders } = useCart();
-    const [selectedNumber, setSelectedNumber] = useState(null);
-    const selected = orders.find((order) => order.numero === selectedNumber) ?? null;
+    const { token, rol } = useAuth();
+    const [orders, setOrders] = useState([]);
+    const [selectedId, setSelectedId] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [reviewingItem, setReviewingItem] = useState(null);
+
+    const isStaff = rol === "VENDEDOR" || rol === "ADMINISTRADOR";
+    const loadOrders = useCallback(async () => {
+        setLoading(true);
+        try {
+            const data = isStaff
+                ? await gamehubApi.boletas(token)
+                : await gamehubApi.misCompras(token);
+            setOrders(data);
+            setError("");
+        } catch (cause) {
+            setError(cause.message || "No fue posible cargar las órdenes.");
+        } finally {
+            setLoading(false);
+        }
+    }, [isStaff, token]);
+
+    useEffect(() => { loadOrders(); }, [loadOrders]);
+
+    const markDelivered = async (id) => {
+        try {
+            await gamehubApi.marcarEntregada(id, token);
+            await loadOrders();
+        } catch (cause) {
+            setError(cause.message || "No fue posible marcar la entrega.");
+        }
+    };
+
+    const selected = orders.find((order) => order.id === selectedId);
+
+    if (loading) {
+        return <section className="container py-4"><p>Cargando órdenes...</p></section>;
+    }
 
     return (
         <section className="container py-4" aria-labelledby="ordenes-titulo">
             <div className="row g-4">
                 <div className="col-12 col-lg-7">
-                    <h1 id="ordenes-titulo" className="h2">Mis órdenes</h1>
+                    <h1 id="ordenes-titulo" className="h2">{isStaff ? "Pedidos" : "Mis órdenes"}</h1>
 
-                    {orders.length === 0 ? (
+                    {error && <p className="alert alert-danger">{error}</p>}
+
+                    {!error && orders.length === 0 && (
                         <div className="alert alert-secondary text-center">
                             <p>Todavía no tienes órdenes registradas.</p>
-                            <Link to="/catalogo" className="btn btn-primary">Ir al catálogo</Link>
+                            <Link to="/catalogo" className="btn btn-primary">
+                                Ir al catálogo
+                            </Link>
                         </div>
-                    ) : (
+                    )}
+
+                    {orders.length > 0 && (
                         <div className="table-responsive">
-                            <table id="tabla-ordenes" className="table table-hover align-middle">
-                                <caption className="visually-hidden">Listado de órdenes del cliente</caption>
+                            <table className="table table-hover align-middle">
                                 <thead>
                                 <tr>
-                                    <th scope="col">N° de orden</th>
-                                    <th scope="col">Fecha</th>
-                                    <th scope="col">Estado</th>
-                                    <th scope="col">Total</th>
-                                    <th scope="col"><span className="visually-hidden">Detalle</span></th>
+                                    <th>N° de orden</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th>Total</th>
+                                    {isStaff && <th>Cliente</th>}
+                                    <th />
                                 </tr>
                                 </thead>
                                 <tbody>
                                 {orders.map((order) => (
-                                    <tr key={order.numero} onClick={() => setSelectedNumber(order.numero)}>
-                                        <td>{order.numero}</td>
-                                        <td>{order.fecha}</td>
+                                    <tr key={order.id}>
+                                        <td>{order.id}</td>
+                                        <td>
+                                            {new Date(order.fecha).toLocaleDateString("es-CL")}
+                                        </td>
                                         <td>{order.estado}</td>
                                         <td>{formatCLP(order.total)}</td>
+                                        {isStaff && <td>{order.usuarioNombre}</td>}
                                         <td>
-                                            <button type="button" className="btn btn-outline-light btn-sm">Ver detalle</button>
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-light btn-sm"
+                                                onClick={() => setSelectedId(order.id)}
+                                            >
+                                                Ver detalle
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
@@ -230,7 +143,49 @@ export default function OrdersPage() {
                     )}
                 </div>
 
-                {selected && <OrderDetail key={selected.numero} order={selected} />}
+                {selected && (
+                    <aside className="col-12 col-lg-5">
+                        <div className="card card-body">
+                            <h2 className="h5">Detalle de la orden {selected.id}</h2>
+                            <p><strong>Estado:</strong> {selected.estado}</p>
+                            {isStaff && <p><strong>Cliente:</strong> {selected.usuarioNombre} ({selected.usuarioEmail})</p>}
+
+                            <ul className="list-unstyled mb-0">
+                                {selected.detalles.map((item) => (
+                                    <li key={item.id} className="mb-2">
+                                        {item.cantidad} x{" "}
+                                        <Link to={`/producto/${item.productoId}`}>
+                                            {item.productoNombre}
+                                        </Link>
+                                        {" — "}{formatCLP(item.subtotal)}
+                                    </li>
+                                ))}
+                            </ul>
+                            {!isStaff && selected.estado === "ENTREGADA" && (
+                                <div className="mt-3">
+                                    <p className="mb-2">Esta compra fue entregada. Puedes dejar una reseña.</p>
+                                    {selected.detalles.map((item) => (
+                                        <div key={`review-${item.id}`} className="mb-2">
+                                            <button type="button" className="btn btn-outline-light btn-sm" onClick={() => setReviewingItem(item.id)}>
+                                                Reseñar {item.productoNombre}
+                                            </button>
+                                            {reviewingItem === item.id && <ReviewForm item={item} onDone={() => setReviewingItem(null)} />}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            {isStaff && selected.estado !== "ENTREGADA" && selected.estado !== "CANCELADA" && (
+                                <button
+                                    type="button"
+                                    className="btn btn-primary mt-3"
+                                    onClick={() => markDelivered(selected.id)}
+                                >
+                                    Marcar como entregada
+                                </button>
+                            )}
+                        </div>
+                    </aside>
+                )}
             </div>
         </section>
     );

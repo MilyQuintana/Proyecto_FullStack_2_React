@@ -31,13 +31,13 @@ function Header() {
                     ) : (
                         <Link to="/login" className="btn btn-primary btn-sm ms-auto me-2 order-lg-last">Iniciar sesión</Link>
                     )}
-                    <Link
+                    {!(session?.rol === "VENDEDOR" || session?.rol === "ADMINISTRADOR") && <Link
                         to="/carrito"
                         className="btn btn-outline-light ms-auto me-2 order-lg-last"
                         aria-label="Ver carrito de compras"
                     >
                         🛒 <span className="badge text-bg-primary">{itemCount}</span>
-                    </Link>
+                    </Link>}
                     <button
                         type="button"
                         className="navbar-toggler"
@@ -50,13 +50,18 @@ function Header() {
                     </button>
                     <div id="menu-principal" className={`collapse navbar-collapse${open ? " show" : ""}`}>
                         <ul className="navbar-nav me-auto">
-                            {NAV_ITEMS.map((item) => (
+                            {NAV_ITEMS.filter((item) => !(session?.rol === "VENDEDOR" || session?.rol === "ADMINISTRADOR") || (item.to !== "/carrito" && item.to !== "/checkout")).map((item) => {
+                                const isStaff = session?.rol === "VENDEDOR" || session?.rol === "ADMINISTRADOR";
+                                const label = item.to === "/ordenes" && isStaff ? "Ventas" : item.label;
+                                return (
                                 <li key={item.to} className="nav-item">
                                     <NavLink to={item.to} end={item.end} className="nav-link" onClick={() => setOpen(false)}>
-                                        {item.label}
+                                        {label}
                                     </NavLink>
                                 </li>
-                            ))}
+                                );
+                            })}
+                            {session?.rol === "ADMINISTRADOR" && <li className="nav-item"><NavLink to="/inventario" className="nav-link" onClick={() => setOpen(false)}>Inventario</NavLink></li>}
                         </ul>
                     </div>
                 </div>

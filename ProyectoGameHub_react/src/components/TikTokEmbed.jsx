@@ -1,32 +1,19 @@
-import { useState } from "react";
-
-const VIDEO_URL = "https://www.tiktok.com/@jccomputers/video/7679526164934806804";
-const VIDEO_ID = "7679526164934806804";
+const VIDEO_ID = "Oi-nrjNvBb4";
+const VIDEO_URL = `https://www.youtube.com/watch?v=${VIDEO_ID}`;
 
 export default function TikTokEmbed() {
-    const [cargar, setCargar] = useState(false);
-
     return (
-        <div className="tiktok-embed-contenedor">
-            {cargar ? (
-                <iframe
-                    title="Video de TikTok de GameHub Store"
-                    src={`https://www.tiktok.com/embed/v2/${VIDEO_ID}`}
-                    width="325"
-                    height="740"
-                    allowFullScreen
-                    allow="encrypted-media; fullscreen; picture-in-picture"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    style={{ border: 0, maxWidth: "100%" }}
-                />
-            ) : (
-                <button type="button" className="btn btn-primary" onClick={() => setCargar(true)}>
-                    ▶ Ver video
-                </button>
-            )}
-            <p className="small mt-2 mb-0">
-                ¿No carga el video? <a href={VIDEO_URL} target="_blank" rel="noopener noreferrer">Míralo en TikTok</a>
-            </p>
+        <div className="ratio ratio-16x9 w-100" style={{ maxWidth: 900 }}>
+            <iframe
+                title="Review del ASUS ROG Strix G16 disponible en GameHub Store"
+                src={`https://www.youtube-nocookie.com/embed/${VIDEO_ID}`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+            />
+            <noscript>
+                <a href={VIDEO_URL} target="_blank" rel="noopener noreferrer">Ver video del ASUS ROG Strix G16</a>
+            </noscript>
         </div>
     );
 }

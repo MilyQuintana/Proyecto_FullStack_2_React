@@ -1,26 +1,33 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { PRODUCTS } from "../data/catalog";
+import { useCatalog } from "./CatalogContext";
+import { useAuth } from "./AuthContext";
 import { getFinalPrice } from "../utils/format";
-import { readStorage, writeStorage, removeStorage } from "../utils/storage";
-import { validateCoupon } from "../utils/coupons";
+import { readStorage, writeStorage } from "../utils/storage";
+import { gamehubApi } from "../services/gamehubApi";
 
-const CART_KEY = "gamehub_carrito";
-const COUPON_KEY = "gamehub_cupon";
-const ORDERS_KEY = "gamehub_ordenes";
+const GUEST_CART_KEY = "gamehub_carrito_invitado";
 
 const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
-    const [lines, setLines] = useState(() => readStorage(CART_KEY, []));
-    const [couponCode, setCouponCode] = useState(() => readStorage(COUPON_KEY, null)?.codigo ?? null);
-    const [orders, setOrders] = useState(() => readStorage(ORDERS_KEY, []));
+    const { products } = useCatalog();
+    const { session } = useAuth();
+    const { token } = useAuth();
+    const cartKey = session?.id ? `gamehub_carrito_usuario_${session.id}` : GUEST_CART_KEY;
+    const [lines, setLines] = useState(() => readStorage(GUEST_CART_KEY, []));
+    const [loadedCartKey, setLoadedCartKey] = useState(null);
+    const [couponInfo, setCouponInfo] = useState(null);
 
-    useEffect(() => writeStorage(CART_KEY, lines), [lines]);
+    // Al cambiar de sesión, carga el carrito correspondiente antes de permitir guardados.
+    // Así el carrito de una cuenta no sobrescribe el de otra.
     useEffect(() => {
-        if (couponCode) writeStorage(COUPON_KEY, { codigo: couponCode });
-        else removeStorage(COUPON_KEY);
-    }, [couponCode]);
-    useEffect(() => writeStorage(ORDERS_KEY, orders), [orders]);
+        setLoadedCartKey(null);
+        setLines(readStorage(cartKey, []));
+        setLoadedCartKey(cartKey);
+    }, [cartKey]);
+    useEffect(() => {
+        if (loadedCartKey === cartKey) writeStorage(cartKey, lines);
+    }, [cartKey, lines, loadedCartKey]);
 
     const addToCart = useCallback((productId, quantity) => {
         setLines((current) => {
@@ -46,29 +53,28 @@ export function CartProvider({ children }) {
         setLines((current) => current.filter((line) => line.idProducto !== productId));
     }, []);
 
-    const removeCoupon = useCallback(() => setCouponCode(null), []);
-
     const clearCart = useCallback(() => {
         setLines([]);
-        setCouponCode(null);
     }, []);
 
-    const applyCoupon = useCallback((code) => {
-        const result = validateCoupon(code);
-        if (result.valid) setCouponCode(result.coupon.code);
-        return result;
-    }, []);
+    const applyCoupon = useCallback(async (code) => {
+        if (!token) return { valid: false, reason: "Inicia sesión para aplicar un cupón." };
+        try {
+            const nextCoupon = await gamehubApi.validarCupon(code, token);
+            setCouponInfo(nextCoupon);
+            return { valid: true, coupon: nextCoupon };
+        } catch (cause) {
+            setCouponInfo(null);
+            return { valid: false, reason: cause.message || "Cupón no válido." };
+        }
+    }, [token]);
 
-    const addOrder = useCallback((order) => setOrders((current) => [order, ...current]), []);
-
-    const updateOrder = useCallback((orderNumber, changes) => {
-        setOrders((current) => current.map((order) => (order.numero === orderNumber ? { ...order, ...changes } : order)));
-    }, []);
+    const removeCoupon = useCallback(() => setCouponInfo(null), []);
 
     const totals = useMemo(() => {
         const detailedLines = lines
             .map((line) => {
-                const product = PRODUCTS.find((item) => item.id === line.idProducto);
+                const product = products.find((item) => item.id === line.idProducto);
                 if (!product) return null;
                 const unitPrice = getFinalPrice(product);
                 return { product, quantity: line.cantidad, unitPrice, subtotal: unitPrice * line.cantidad };
@@ -77,32 +83,25 @@ export function CartProvider({ children }) {
 
         const subtotal = detailedLines.reduce((sum, line) => sum + line.subtotal, 0);
 
-        let discount = 0;
-        if (couponCode) {
-            const result = validateCoupon(couponCode);
-            if (result.valid) {
-                discount = Math.min(subtotal * (result.coupon.percentage / 100), result.coupon.cap);
-            }
-        }
-
+        const discount = couponInfo
+            ? Math.min(subtotal * couponInfo.porcentaje / 100, couponInfo.tope ?? Infinity)
+            : 0;
         return { detailedLines, subtotal, discount, total: Math.max(subtotal - discount, 0) };
-    }, [lines, couponCode]);
+    }, [lines, products, couponInfo]);
 
     const itemCount = useMemo(() => lines.reduce((sum, line) => sum + line.cantidad, 0), [lines]);
 
     const value = {
         ...totals,
         itemCount,
-        couponCode,
-        orders,
         addToCart,
         updateQuantity,
         removeFromCart,
         clearCart,
+        couponCode: couponInfo?.codigo ?? "",
+        couponInfo,
         applyCoupon,
         removeCoupon,
-        addOrder,
-        updateOrder,
     };
 
     return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

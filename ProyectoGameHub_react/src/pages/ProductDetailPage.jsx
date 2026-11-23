@@ -6,6 +6,7 @@ import { useReviews } from "../context/ReviewsContext";
 import FormField, { controlClass } from "../components/FormField";
 import { formatCLP } from "../utils/format";
 import { integerInRange } from "../utils/validators";
+import { useCatalog } from "../context/CatalogContext";
 
 export function stockMessage(stock) {
     if (stock === 0) return "Sin stock disponible";
@@ -86,11 +87,33 @@ export function AddToCartForm({ product }) {
 export default function ProductDetailPage() {
     const { id } = useParams();
     const { getReviews } = useReviews();
-    const product = PRODUCTS.find((item) => item.id === Number(id));
+    const { products, loading } = useCatalog();
+
+    const apiProduct = products.find((item) => item.id === Number(id));
+
+    const localProduct = PRODUCTS.find(
+        (item) => item.name === apiProduct?.name
+    );
+
+    const product = apiProduct
+        ? {
+            ...localProduct,
+            ...apiProduct,
+            images: localProduct?.images ?? apiProduct.images,
+            specs: localProduct?.specs ?? [],
+        }
+        : null;
+
     const [selectedImage, setSelectedImage] = useState(0);
 
     useEffect(() => setSelectedImage(0), [id]);
-
+    if (loading) {
+        return (
+            <section className="container py-5">
+                <p>Cargando producto...</p>
+            </section>
+        );
+    }
     if (!product) {
         return (
             <section className="container py-5">
@@ -100,7 +123,7 @@ export default function ProductDetailPage() {
         );
     }
 
-    const reviews = getReviews(product.id);
+    const reviews = getReviews(localProduct?.id);
     const mainImage = product.images[selectedImage] ?? product.image;
 
     return (
