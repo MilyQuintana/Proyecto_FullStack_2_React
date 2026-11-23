@@ -1,9 +1,5 @@
 {
-
   "rewrites": [
-
-    { "source": "/(.*)", "destination": "/main.jsx" }
-
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
-
 }
