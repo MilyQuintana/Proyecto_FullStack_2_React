@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 const NAV_ITEMS = [
     { to: "/", label: "Inicio", end: true },
@@ -12,6 +13,7 @@ const NAV_ITEMS = [
 
 function Header() {
     const { itemCount } = useCart();
+    const { session, logout } = useAuth();
     const [open, setOpen] = useState(false);
 
     return (
@@ -21,6 +23,14 @@ function Header() {
                     <Link to="/" className="navbar-brand fw-bold marca">
                         Game<span>Hub</span> Store
                     </Link>
+                    {session ? (
+                        <div className="d-flex align-items-center gap-2 ms-auto me-2 order-lg-last">
+                            <span className="small text-body-secondary">{session.nombre}</span>
+                            <button type="button" className="btn btn-outline-secondary btn-sm" onClick={logout}>Salir</button>
+                        </div>
+                    ) : (
+                        <Link to="/login" className="btn btn-primary btn-sm ms-auto me-2 order-lg-last">Iniciar sesión</Link>
+                    )}
                     <Link
                         to="/carrito"
                         className="btn btn-outline-light ms-auto me-2 order-lg-last"
