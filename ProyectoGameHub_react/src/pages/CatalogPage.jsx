@@ -41,17 +41,26 @@ export default function CatalogPage() {
     const [page, setPage] = useState(1);
 
     // catalog.js conserva imágenes y categorías de presentación; la API manda IDs, precios y stock.
-    const products = useMemo(() => apiProducts.map((apiProduct) => {
-        const localProduct = PRODUCTS.find((product) => product.name === apiProduct.name);
-        return {
-            ...localProduct,
-            ...apiProduct,
-            category: localProduct?.category ?? apiProduct.category,
-            image: localProduct?.image ?? apiProduct.image,
-            discountPrice: null,
-        };
-    }), [apiProducts]);
+    const products = useMemo(() => {
+        return apiProducts.map((apiProduct) => {
+            const name = apiProduct.name ?? apiProduct.nombre;
+            const localProduct = PRODUCTS.find((product) => product.name === name);
 
+            return {
+                ...localProduct,
+                ...apiProduct,
+                name,
+                brand: apiProduct.brand ?? apiProduct.marca ?? "",
+                regularPrice: apiProduct.regularPrice ?? apiProduct.precio,
+                description: apiProduct.description ?? apiProduct.descripcion,
+                category: localProduct?.category
+                    ?? apiProduct.category
+                    ?? String(apiProduct.categoriaId ?? ""),
+                image: apiProduct.image || apiProduct.imagen || localProduct?.image,
+                discountPrice: null,
+            };
+        });
+    }, [apiProducts]);
     const updateDraft = (field) => (event) => setDraft((current) => ({ ...current, [field]: event.target.value }));
 
     const handleSubmit = (event) => {
