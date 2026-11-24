@@ -23,6 +23,8 @@ export function CartProvider({ children }) {
     useEffect(() => {
         setLoadedCartKey(null);
         setLines(readStorage(cartKey, []));
+        // Un cupón pertenece al carrito de la sesión actual; nunca debe pasar a otra cuenta.
+        setCouponInfo(null);
         setLoadedCartKey(cartKey);
     }, [cartKey]);
     useEffect(() => {
