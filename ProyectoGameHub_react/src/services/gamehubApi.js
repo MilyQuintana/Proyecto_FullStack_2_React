@@ -43,7 +43,7 @@ export const gamehubApi = {
   login: (email, password) => request("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
   registro: (nombre, email, password, telefono, direccion) => request("/auth/register", { method: "POST", body: JSON.stringify({ nombre, email, password, telefono, direccion }) }),
   crearBoleta: (items, token, codigoCupon) => request("/boletas", { method: "POST", token, body: JSON.stringify({ items, codigoCupon: codigoCupon || null }) }),
-  crearCupon: (cupon, token) => request("/cupones", { method: "POST", token, body: JSON.stringify(cupon) }),
+  crearCupon: (cupon, token) => request("/cupones", {method: "POST", token, body: JSON.stringify(cupon),}),
   cupones: (token) => request("/cupones", { token }),
   validarCupon: (codigo, token) => request(`/cupones/validar?codigo=${encodeURIComponent(codigo)}`, { token }),
   cambiarEstadoCupon: (id, activo, token) => request(`/cupones/${id}/estado?activo=${activo}`, { method: "PATCH", token }),
