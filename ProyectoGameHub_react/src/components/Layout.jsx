@@ -71,6 +71,8 @@ function Header() {
 }
 
 function Footer() {
+    const { session } = useAuth();
+    const isStaff = session?.rol === "VENDEDOR" || session?.rol === "ADMINISTRADOR";
     return (
         <footer className="border-top mt-5 py-4 bg-body-tertiary">
             <div className="container">
@@ -87,8 +89,8 @@ function Footer() {
                         <ul className="list-unstyled d-flex flex-wrap gap-3 mb-0">
                             <li><Link to="/">Inicio</Link></li>
                             <li><Link to="/catalogo">Catálogo</Link></li>
-                            <li><Link to="/carrito">Carrito</Link></li>
-                            <li><Link to="/checkout">Checkout</Link></li>
+                            {!isStaff && <li><Link to="/carrito">Carrito</Link></li>}
+                            {!isStaff && <li><Link to="/checkout">Checkout</Link></li>}
                         </ul>
                     </nav>
                     <p className="col-md-3 mb-0 small text-body-secondary text-md-end">
