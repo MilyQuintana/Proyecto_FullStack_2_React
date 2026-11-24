@@ -5,6 +5,7 @@ import FormField, { controlClass } from "../components/FormField";
 import { formatCLP } from "../utils/format";
 import { email, hasErrors, phoneCL, required, selectRequired } from "../utils/validators";
 import { useAuth } from "../context/AuthContext";
+import { useCatalog } from "../context/CatalogContext";
 import { gamehubApi } from "../services/gamehubApi";
 
 const REGIONS = [
@@ -50,6 +51,7 @@ function validate(form) {
 export default function CheckoutPage() {
     const { detailedLines, subtotal, discount, total, clearCart, couponCode, couponInfo: cartCouponInfo } = useCart();
     const { token } = useAuth();
+    const { refresh: refreshCatalog } = useCatalog();
     const [submitError, setSubmitError] = useState("");
     const [sending, setSending] = useState(false);
     const [form, setForm] = useState(EMPTY_FORM);
@@ -106,6 +108,9 @@ export default function CheckoutPage() {
                 token, coupon
             );
 
+            // El stock se descuenta en el servidor; se vuelve a consultar para no dejar
+            // catálogo, detalle y carrito mostrando las existencias anteriores.
+            await refreshCatalog();
             clearCart();
             setCompletedOrder(boleta);
         } catch (cause) {
