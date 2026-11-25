@@ -15,17 +15,26 @@ export function mockLocalStorage(initial = {}) {
 
 export const firstProduct = PRODUCTS.find((product) => product.stock > 1);
 
+export const guestCartKey = "gamehub_carrito_invitado";
+export const customer = { id: 42, token: "token-cliente", rol: "CLIENTE" };
+export const customerCartKey = `gamehub_carrito_usuario_${customer.id}`;
+export const testCoupon = { codigo: "GAMER10", porcentaje: 10, tope: 50000 };
+
 export function makeOrder(overrides = {}) {
   return {
-    numero: "GH-00000001",
-    fecha: new Date().toISOString().slice(0, 10),
-    estado: "Pagada",
+    id: 123,
+    fecha: "2026-11-24T12:00:00",
+    estado: "PAGADA",
     total: 1000,
-    subtotal: 1000,
-    descuento: 0,
-    pago: { metodo: "tarjeta-credito", estado: "Aprobado" },
-    despacho: { estado: "En preparación", nombre: "Ana", correo: "a@a.cl", telefono: "+56912345678", region: "valparaiso", comuna: "Viña", direccion: "Calle 1" },
-    productos: [{ id: firstProduct.id, nombre: firstProduct.name, cantidad: 1, subtotal: 1000, resenada: false }],
+    usuarioNombre: "Ana Pérez",
+    usuarioEmail: "ana@example.test",
+    detalles: [{
+      id: 1,
+      productoId: firstProduct.id,
+      productoNombre: firstProduct.name,
+      cantidad: 1,
+      subtotal: 1000,
+    }],
     ...overrides,
   };
 }

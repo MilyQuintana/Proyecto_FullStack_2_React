@@ -6,8 +6,8 @@ import { mockLocalStorage } from "../helpers/mocks.js";
 describe("HomePage", () => {
   beforeEach(() => mockLocalStorage());
 
-  it("muestra el banner, el carrusel de categorías y hasta 4 productos destacados", () => {
-    const { container } = renderWithProviders(<HomePage />);
+  it("muestra el banner, el carrusel de categorías y hasta 4 productos destacados", async () => {
+    const { container } = await renderWithProviders(<HomePage />);
     expect(screen.getByRole("heading", { level: 1, name: "GameHub Store" })).toBeTruthy();
     expect(container.querySelector(".carousel")).not.toBeNull();
     const cards = container.querySelectorAll(".tarjeta-producto");
@@ -21,15 +21,15 @@ describe("HomePage", () => {
       fireEvent.click(screen.getByRole("button", { name: "Suscribirse" }));
     };
 
-    it("muestra error con un correo inválido", () => {
-      renderWithProviders(<NewsletterForm />);
+    it("muestra error con un correo inválido", async () => {
+      await renderWithProviders(<NewsletterForm />);
       submit("malo");
       expect(screen.getByText(/formato válido/)).toBeTruthy();
       expect(screen.queryByText("¡Gracias por suscribirte!")).toBeNull();
     });
 
-    it("confirma la suscripción y limpia el campo con un correo válido", () => {
-      renderWithProviders(<NewsletterForm />);
+    it("confirma la suscripción y limpia el campo con un correo válido", async () => {
+      await renderWithProviders(<NewsletterForm />);
       submit("ana@correo.cl");
       expect(screen.getByText("¡Gracias por suscribirte!")).toBeTruthy();
       expect(screen.getByLabelText("Correo electrónico").value).toBe("");

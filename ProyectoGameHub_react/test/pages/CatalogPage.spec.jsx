@@ -9,27 +9,27 @@ const count = () => screen.getByText(/producto\(s\) encontrado\(s\)/).textConten
 describe("CatalogPage", () => {
   beforeEach(() => mockLocalStorage());
 
-  it("muestra todos los productos por defecto", () => {
-    renderWithProviders(<CatalogPage />, { route: "/catalogo" });
+  it("muestra todos los productos por defecto", async () => {
+    await renderWithProviders(<CatalogPage />, { route: "/catalogo" });
     expect(count()).toContain(`${PRODUCTS.length} producto(s)`);
   });
 
-  it("aplica el filtro de categoría que viene en la URL", () => {
+  it("aplica el filtro de categoría que viene en la URL", async () => {
     const expected = PRODUCTS.filter((product) => product.category === "Notebooks").length;
-    renderWithProviders(<CatalogPage />, { route: "/catalogo?categoria=Notebooks" });
+    await renderWithProviders(<CatalogPage />, { route: "/catalogo?categoria=Notebooks" });
     expect(count()).toContain(`${expected} producto(s)`);
   });
 
-  it("filtra por categoría al aplicar los filtros", () => {
-    renderWithProviders(<CatalogPage />, { route: "/catalogo" });
+  it("filtra por categoría al aplicar los filtros", async () => {
+    await renderWithProviders(<CatalogPage />, { route: "/catalogo" });
     fireEvent.change(screen.getByLabelText("Categoría"), { target: { value: "Monitores" } });
     fireEvent.click(screen.getByRole("button", { name: "Aplicar filtros" }));
     const expected = PRODUCTS.filter((product) => product.category === "Monitores").length;
     expect(count()).toContain(`${expected} producto(s)`);
   });
 
-  it("valida que el precio máximo no sea menor al mínimo", () => {
-    renderWithProviders(<CatalogPage />, { route: "/catalogo" });
+  it("valida que el precio máximo no sea menor al mínimo", async () => {
+    await renderWithProviders(<CatalogPage />, { route: "/catalogo" });
     fireEvent.change(screen.getByLabelText("Precio mínimo"), { target: { value: "500000" } });
     fireEvent.change(screen.getByLabelText("Precio máximo"), { target: { value: "1000" } });
     fireEvent.click(screen.getByRole("button", { name: "Aplicar filtros" }));
@@ -37,14 +37,14 @@ describe("CatalogPage", () => {
     expect(count()).toContain(`${PRODUCTS.length} producto(s)`);
   });
 
-  it("'Limpiar filtros' restablece el listado completo", () => {
-    renderWithProviders(<CatalogPage />, { route: "/catalogo?categoria=Notebooks" });
+  it("'Limpiar filtros' restablece el listado completo", async () => {
+    await renderWithProviders(<CatalogPage />, { route: "/catalogo?categoria=Notebooks" });
     fireEvent.click(screen.getByRole("button", { name: "Limpiar filtros" }));
     expect(count()).toContain(`${PRODUCTS.length} producto(s)`);
   });
 
-  it("pagina de a 15 y carga más al pedirlo", () => {
-    const { container } = renderWithProviders(<CatalogPage />, { route: "/catalogo" });
+  it("pagina de a 15 y carga más al pedirlo", async () => {
+    const { container } = await renderWithProviders(<CatalogPage />, { route: "/catalogo" });
     const initial = container.querySelectorAll(".tarjeta-producto").length;
     expect(initial).toBe(Math.min(15, PRODUCTS.length));
     if (PRODUCTS.length > 15) {

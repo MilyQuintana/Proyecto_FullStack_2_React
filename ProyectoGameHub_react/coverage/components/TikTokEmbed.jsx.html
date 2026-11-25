@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>4/5</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>1/2</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/2</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>4/5</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
@@ -82,27 +82,11 @@
 <a name='L17'></a><a href='#L17'>17</a>
 <a name='L18'></a><a href='#L18'>18</a>
 <a name='L19'></a><a href='#L19'>19</a>
-<a name='L20'></a><a href='#L20'>20</a>
-<a name='L21'></a><a href='#L21'>21</a>
-<a name='L22'></a><a href='#L22'>22</a>
-<a name='L23'></a><a href='#L23'>23</a>
-<a name='L24'></a><a href='#L24'>24</a>
-<a name='L25'></a><a href='#L25'>25</a>
-<a name='L26'></a><a href='#L26'>26</a>
-<a name='L27'></a><a href='#L27'>27</a>
-<a name='L28'></a><a href='#L28'>28</a>
-<a name='L29'></a><a href='#L29'>29</a>
-<a name='L30'></a><a href='#L30'>30</a>
-<a name='L31'></a><a href='#L31'>31</a>
-<a name='L32'></a><a href='#L32'>32</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<a name='L20'></a><a href='#L20'>20</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -116,54 +100,34 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { useState } from "react";
-&nbsp;
-const VIDEO_URL = "https://www.tiktok.com/@jccomputers/video/7679526164934806804";
-const VIDEO_ID = "7679526164934806804";
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const VIDEO_ID = "Oi-nrjNvBb4";
+const VIDEO_URL = `https://www.youtube.com/watch?v=${VIDEO_ID}`;
 &nbsp;
 export default function TikTokEmbed() {
-    const [cargar, setCargar] = useState(false);
-&nbsp;
     return (
-        &lt;div className="tiktok-embed-contenedor"&gt;
-            {cargar ? (
-<span class="branch-0 cbranch-no" title="branch not covered" >                &lt;iframe</span>
-                    title="Video de TikTok de GameHub Store"
-                    src={`https://www.tiktok.com/embed/v2/${VIDEO_ID}`}
-                    width="325"
-                    height="740"
-                    allowFullScreen
-                    allow="encrypted-media; fullscreen; picture-in-picture"
-                    referrerPolicy="strict-origin-when-cross-origin"
-                    style={{ border: 0, maxWidth: "100%" }}
-                /&gt;
-            ) : (
-                &lt;button type="button" className="btn btn-primary" onClick={<span class="fstat-no" title="function not covered" >()</span> =&gt; <span class="cstat-no" title="statement not covered" >setCargar(true)}</span>&gt;
-                    ▶ Ver video
-                &lt;/button&gt;
-            )}
-            &lt;p className="small mt-2 mb-0"&gt;
-                ¿No carga el video? &lt;a href={VIDEO_URL} target="_blank" rel="noopener noreferrer"&gt;Míralo en TikTok&lt;/a&gt;
-            &lt;/p&gt;
+        &lt;div className="ratio ratio-16x9 w-100" style={{ maxWidth: 900 }}&gt;
+            &lt;iframe
+                title="Review del ASUS ROG Strix G16 disponible en GameHub Store"
+                src={`https://www.youtube-nocookie.com/embed/${VIDEO_ID}`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
+            /&gt;
+            &lt;noscript&gt;
+                &lt;a href={VIDEO_URL} target="_blank" rel="noopener noreferrer"&gt;Ver video del ASUS ROG Strix G16&lt;/a&gt;
+            &lt;/noscript&gt;
         &lt;/div&gt;
     );
-}</pre></td></tr></table></pre>
+}
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-10-20T01:51:37.509Z
+                at 2026-11-25T20:57:59.106Z
             </div>
         <script src="../prettify.js"></script>
         <script>

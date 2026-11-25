@@ -1,114 +1,115 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import OrdersPage from "../../src/pages/OrdersPage";
+import { gamehubApi } from "../../src/services/gamehubApi";
 import { renderWithProviders } from "../helpers/render.jsx";
-import { firstProduct, makeOrder, mockLocalStorage } from "../helpers/mocks.js";
+import { customer, firstProduct, makeOrder, mockLocalStorage } from "../helpers/mocks.js";
 
-const seedOrders = (...orders) => mockLocalStorage({ gamehub_ordenes: JSON.stringify(orders) });
+const staff = { id: 7, token: "token-vendedor", rol: "VENDEDOR" };
 const openDetail = () => fireEvent.click(screen.getByRole("button", { name: "Ver detalle" }));
-const reviewButton = () => screen.getByRole("button", { name: "Escribir reseña" });
-const delivered = () =>
-  makeOrder({ estado: "Entregada", despacho: { ...makeOrder().despacho, estado: "Entregado" } });
+const reviewButton = () => screen.getByRole("button", { name: `Reseñar ${firstProduct.name}` });
+
+function mockOrders(orders = [], session = customer) {
+  const store = mockLocalStorage({ gamehub_sesion: JSON.stringify(session) });
+  const listOrders = spyOn(gamehubApi, session.rol === "CLIENTE" ? "misCompras" : "boletas").and.resolveTo(orders);
+  return { store, listOrders };
+}
 
 describe("OrdersPage", () => {
-  it("muestra el estado vacío cuando no hay órdenes", () => {
-    mockLocalStorage();
-    renderWithProviders(<OrdersPage />);
+  it("muestra el estado vacío cuando no hay órdenes", async () => {
+    const { listOrders } = mockOrders();
+    await renderWithProviders(<OrdersPage />);
     expect(screen.getByText("Todavía no tienes órdenes registradas.")).toBeTruthy();
+    expect(listOrders).toHaveBeenCalledOnceWith(customer.token);
   });
 
-  it("lista las órdenes y abre el detalle", () => {
-    seedOrders(makeOrder());
-    renderWithProviders(<OrdersPage />);
-    expect(screen.getByText("GH-00000001")).toBeTruthy();
+  it("lista las órdenes y abre el detalle", async () => {
+    mockOrders([makeOrder()]);
+    await renderWithProviders(<OrdersPage />);
+    expect(screen.getByText("123")).toBeTruthy();
     openDetail();
-    expect(screen.getByRole("heading", { name: "Detalle de la orden GH-00000001" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Detalle de la orden 123" })).toBeTruthy();
   });
 
-  it("el nombre del producto en el detalle es un hipervínculo a su página", () => {
-    seedOrders(makeOrder());
-    renderWithProviders(<OrdersPage />);
+  it("enlaza el producto del detalle a su página", async () => {
+    mockOrders([makeOrder()]);
+    await renderWithProviders(<OrdersPage />);
     openDetail();
-    const link = screen.getByRole("link", { name: firstProduct.name });
-    expect(link.getAttribute("href")).toBe(`/producto/${firstProduct.id}`);
+    expect(screen.getByRole("link", { name: firstProduct.name }).getAttribute("href"))
+        .toBe(`/producto/${firstProduct.id}`);
   });
 
-  describe("reseñas solo con pedido entregado", () => {
-    it("deshabilita 'Escribir reseña' si el pedido no está entregado", () => {
-      seedOrders(makeOrder());
-      renderWithProviders(<OrdersPage />);
+  it("muestra el error cuando la API no puede listar las órdenes", async () => {
+    const { listOrders } = mockOrders();
+    listOrders.and.rejectWith(new Error("No fue posible cargar las órdenes."));
+    await renderWithProviders(<OrdersPage />);
+    expect(screen.getByText("No fue posible cargar las órdenes.")).toBeTruthy();
+    expect(screen.queryByText("Todavía no tienes órdenes registradas.")).toBeNull();
+  });
+
+  describe("reseñas del cliente", () => {
+    it("no permite reseñar una orden pendiente ni marcarla como entregada", async () => {
+      mockOrders([makeOrder()]);
+      await renderWithProviders(<OrdersPage />);
       openDetail();
-      expect(reviewButton().disabled).toBeTrue();
-      expect(screen.getByText(/cuando el pedido esté entregado/)).toBeTruthy();
+      expect(screen.queryByRole("button", { name: /Reseñar/ })).toBeNull();
+      expect(screen.queryByRole("button", { name: "Marcar como entregada" })).toBeNull();
     });
 
-    it("marcar como entregado habilita la reseña", () => {
-      seedOrders(makeOrder());
-      renderWithProviders(<OrdersPage />);
-      openDetail();
-      fireEvent.click(screen.getByRole("button", { name: /Marcar como entregado/ }));
-      expect(reviewButton().disabled).toBeFalse();
-      expect(screen.getByText("Entregado", { exact: false })).toBeTruthy();
-    });
-
-    it("exige comentario y guarda la reseña cuando el pedido está entregado", () => {
-      const store = seedOrders(delivered());
-      renderWithProviders(<OrdersPage />);
+    it("exige que el comentario tenga contenido", async () => {
+      const { store } = mockOrders([makeOrder({ estado: "ENTREGADA" })]);
+      await renderWithProviders(<OrdersPage />);
       openDetail();
       fireEvent.click(reviewButton());
-
-      fireEvent.click(screen.getByRole("button", { name: "Enviar reseña" }));
-      expect(screen.getByText("El comentario es obligatorio.")).toBeTruthy();
-
-      fireEvent.change(screen.getByLabelText(/Reseña para/), { target: { value: "Excelente producto" } });
-      fireEvent.change(screen.getByLabelText("Puntuación (1 a 5)"), { target: { value: "4" } });
-      fireEvent.click(screen.getByRole("button", { name: "Enviar reseña" }));
-
-      expect(screen.getByText("¡Gracias por tu reseña!")).toBeTruthy();
-      const saved = JSON.parse(store.gamehub_resenas);
-      expect(saved[firstProduct.id][0]).toEqual(jasmine.objectContaining({ rating: 4, comment: "Excelente producto" }));
-      expect(JSON.parse(store.gamehub_ordenes)[0].productos[0].resenada).toBeTrue();
+      fireEvent.change(screen.getByLabelText("Comentario"), { target: { value: "   " } });
+      fireEvent.click(screen.getByRole("button", { name: "Publicar reseña" }));
+      expect(screen.getByText("Escribe un comentario y una puntuación entre 1 y 5.")).toBeTruthy();
+      expect(JSON.parse(store.gamehub_resenas)[firstProduct.id]).toBeUndefined();
     });
 
-    it("rechaza una puntuación fuera de 1 a 5", () => {
-      seedOrders(delivered());
-      renderWithProviders(<OrdersPage />);
+    it("guarda la puntuación y el comentario de una compra entregada", async () => {
+      const { store } = mockOrders([makeOrder({ estado: "ENTREGADA" })]);
+      await renderWithProviders(<OrdersPage />);
       openDetail();
       fireEvent.click(reviewButton());
-      fireEvent.change(screen.getByLabelText(/Reseña para/), { target: { value: "ok" } });
-      fireEvent.change(screen.getByLabelText("Puntuación (1 a 5)"), { target: { value: "9" } });
-      fireEvent.click(screen.getByRole("button", { name: "Enviar reseña" }));
-      expect(screen.getByText("La puntuación no puede ser mayor que 5.")).toBeTruthy();
+      fireEvent.change(screen.getByLabelText("Comentario"), { target: { value: "Excelente producto" } });
+      fireEvent.change(screen.getByLabelText("Puntuación"), { target: { value: "4" } });
+      fireEvent.click(screen.getByRole("button", { name: "Publicar reseña" }));
+      expect(screen.queryByLabelText("Comentario")).toBeNull();
+      expect(JSON.parse(store.gamehub_resenas)[firstProduct.id][0])
+          .toEqual(jasmine.objectContaining({ rating: 4, comment: "Excelente producto" }));
     });
   });
 
-  describe("garantía", () => {
-    it("exige el motivo", () => {
-      seedOrders(makeOrder());
-      renderWithProviders(<OrdersPage />);
-      openDetail();
-      fireEvent.click(screen.getByRole("button", { name: "Solicitar garantía" }));
-      fireEvent.click(screen.getByRole("button", { name: "Enviar solicitud" }));
-      expect(screen.getByText("El motivo de la garantía es obligatorio.")).toBeTruthy();
+  describe("pedidos del personal", () => {
+    it("muestra los pedidos y el nombre del cliente al vendedor", async () => {
+      const { listOrders } = mockOrders([makeOrder()], staff);
+      await renderWithProviders(<OrdersPage />);
+      expect(listOrders).toHaveBeenCalledOnceWith(staff.token);
+      expect(screen.getByRole("heading", { name: "Pedidos" })).toBeTruthy();
+      expect(within(screen.getByRole("table")).getByText("Ana Pérez")).toBeTruthy();
     });
 
-    it("registra la solicitud dentro del plazo de 30 días", () => {
-      const store = seedOrders(makeOrder());
-      renderWithProviders(<OrdersPage />);
+    it("marca un pedido como entregado y actualiza el listado desde la API", async () => {
+      const { listOrders } = mockOrders([makeOrder()], staff);
+      const deliver = spyOn(gamehubApi, "marcarEntregada").and.callFake(async () => {
+        listOrders.and.resolveTo([makeOrder({ estado: "ENTREGADA" })]);
+      });
+      await renderWithProviders(<OrdersPage />);
       openDetail();
-      fireEvent.click(screen.getByRole("button", { name: "Solicitar garantía" }));
-      fireEvent.change(screen.getByLabelText("Motivo de la garantía"), { target: { value: "No enciende" } });
-      fireEvent.click(screen.getByRole("button", { name: "Enviar solicitud" }));
-      expect(JSON.parse(store.gamehub_ordenes)[0].garantia.estado).toBe("En revisión");
+      fireEvent.click(screen.getByRole("button", { name: "Marcar como entregada" }));
+      await waitFor(() => {
+        expect(within(screen.getByRole("table")).getByText("ENTREGADA")).toBeTruthy();
+      });
+      expect(deliver).toHaveBeenCalledOnceWith(123, staff.token);
+      expect(listOrders.calls.count()).toBe(2);
+      expect(screen.queryByRole("button", { name: "Marcar como entregada" })).toBeNull();
     });
 
-    it("rechaza la solicitud si la orden tiene más de 30 días", () => {
-      seedOrders(makeOrder({ fecha: "2020-01-01" }));
-      renderWithProviders(<OrdersPage />);
+    it("no ofrece marcar como entregado un pedido cancelado", async () => {
+      mockOrders([makeOrder({ estado: "CANCELADA" })], staff);
+      await renderWithProviders(<OrdersPage />);
       openDetail();
-      fireEvent.click(screen.getByRole("button", { name: "Solicitar garantía" }));
-      fireEvent.change(screen.getByLabelText("Motivo de la garantía"), { target: { value: "Falla" } });
-      fireEvent.click(screen.getByRole("button", { name: "Enviar solicitud" }));
-      expect(screen.getByText(/ya venció/)).toBeTruthy();
+      expect(screen.queryByRole("button", { name: "Marcar como entregada" })).toBeNull();
     });
   });
 });
